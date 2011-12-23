@@ -1,4 +1,10 @@
-﻿===========================================
+﻿'
+' Copyright (c) 2011 Makoto Ishida
+' Please see the file MIT-LICENSE.txt for copying permission.
+'
+
+
+===========================================
 S3 Backup Utility
 ===========================================
 

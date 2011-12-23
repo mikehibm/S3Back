@@ -1,4 +1,9 @@
-﻿Imports System
+﻿'
+' Copyright (c) 2011 Makoto Ishida
+' Please see the file MIT-LICENSE.txt for copying permission.
+'
+
+Imports System
 Imports System.IO
 Imports System.Collections.Generic
 Imports System.Collections.Specialized

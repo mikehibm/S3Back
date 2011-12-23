@@ -1,4 +1,9 @@
-﻿Imports System.Configuration
+﻿'
+' Copyright (c) 2011 Makoto Ishida
+' Please see the file MIT-LICENSE.txt for copying permission.
+'
+
+Imports System.Configuration
 Imports System.Configuration.ConfigurationManager
 
 Imports Amazon
