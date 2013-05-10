@@ -43,6 +43,7 @@ Module Module1
             Select Case args(0).ToUpper
                 Case "/B" : UploadFile("", "", "", args(1))
                 Case "/ENC" : ShowEncrypted(args(1))
+                Case "/DEC" : ShowDecrypted(args(1))
                 Case "/DEL" : DeleteFolder(args(1), "", "", "")
                 Case Else : ShowHelp()
             End Select
