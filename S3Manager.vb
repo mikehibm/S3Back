@@ -8,28 +8,23 @@ Imports System.IO
 Imports System.Collections.Generic
 Imports System.Collections.Specialized
 Imports System.Configuration
-
-Imports Amazon
 Imports Amazon.S3
 Imports Amazon.S3.Model
-
+Imports System.Net
 
 Public Class S3Manager
 
-    Private Shared Function GetAmazonS3() As AmazonS3
+    Private Shared Function GetAmazonS3() As AmazonS3Client
         Dim appConfig As NameValueCollection = ConfigurationManager.AppSettings
-
         Dim config As AmazonS3Config = New AmazonS3Config()
 
         Dim accessKey As String = Encrypt.Decrypt(appConfig("EncryptedAWSAccessKey"))
         Dim secretKey As String = Encrypt.Decrypt(appConfig("EncryptedAWSSecretKey"))
-        Dim s3 As AmazonS3 = AWSClientFactory.CreateAmazonS3Client(accessKey, secretKey, config)
-
+        Dim s3 As AmazonS3Client = New AmazonS3Client(accessKey, secretKey, config)
         Return s3
     End Function
 
     Private Shared Sub HandleError(ByVal ex As Exception)
-
         If ex.GetType.IsInstanceOfType(GetType(AmazonS3Exception)) Then
             Dim exAmazon As AmazonS3Exception = CType(ex, AmazonS3Exception)
             If exAmazon.ErrorCode.Equals("InvalidAccessKeyId") OrElse exAmazon.ErrorCode.Equals("InvalidSecurity") Then
@@ -39,12 +34,11 @@ Public Class S3Manager
                 Console.WriteLine("Response Status Code: " & exAmazon.StatusCode.ToString())
                 Console.WriteLine("Error Code: " & exAmazon.ErrorCode)
                 Console.WriteLine("Request ID: " & exAmazon.RequestId)
-                Console.WriteLine("XML: " & exAmazon.XML)
+                'Console.WriteLine("XML: " & exAmazon.ToString())
             End If
         Else
             Console.WriteLine("Error: " & ex.Message)
         End If
-
     End Sub
 
 
@@ -53,7 +47,7 @@ Public Class S3Manager
     ''' </summary>
     ''' <remarks></remarks>
     Public Shared Sub ListBuckets()
-        Dim s3 As AmazonS3 = GetAmazonS3()
+        Dim s3 As AmazonS3Client = GetAmazonS3()
 
         Try
             Dim response As ListBucketsResponse = s3.ListBuckets()
@@ -101,7 +95,7 @@ Public Class S3Manager
     ''' <remarks></remarks>
     Public Shared Function GetObjects(bucketname As String, foldername As String) As List(Of S3Object)
         Dim list As List(Of S3Object) = Nothing
-        Dim s3 As AmazonS3 = GetAmazonS3()
+        Dim s3 As AmazonS3Client = GetAmazonS3()
 
         Dim request As New ListObjectsRequest()
         request.BucketName = bucketname
@@ -116,7 +110,7 @@ Public Class S3Manager
 
     Public Shared Function CreateFolder(bucketname As String, foldername As String) As Boolean
         Dim result As Boolean = False
-        Dim s3 As AmazonS3 = GetAmazonS3()
+        Dim s3 As AmazonS3Client = GetAmazonS3()
 
         Try
             Console.Write("Creating folder '" & foldername & "' ... ")
@@ -140,7 +134,7 @@ Public Class S3Manager
 
     Public Shared Function DeleteObject(bucketname As String, key As String) As Boolean
         Dim result As Boolean = False
-        Dim s3 As AmazonS3 = GetAmazonS3()
+        Dim s3 As AmazonS3Client = GetAmazonS3()
 
         Try
             Console.Write("Deleting object '" & key & "' ... ")
@@ -150,7 +144,7 @@ Public Class S3Manager
             request.Key = key
 
             Dim response As DeleteObjectResponse = s3.DeleteObject(request)
-            If String.IsNullOrEmpty(response.ResponseXml) Then
+            If response.HttpStatusCode = HttpStatusCode.OK Then
                 Console.WriteLine("Success.")
                 result = True
             Else
@@ -167,7 +161,7 @@ Public Class S3Manager
 
     Public Shared Function UploadFile(bucketname As String, foldername As String, filepath As String) As Boolean
         Dim result As Boolean = False
-        Dim s3 As AmazonS3 = GetAmazonS3()
+        Dim s3 As AmazonS3Client = GetAmazonS3()
 
         Try
             Console.Write("Uploading file '" & filepath & "' ... ")
@@ -181,8 +175,7 @@ Public Class S3Manager
 
             Dim timeout_minutes As Integer = CInt(Val(ConfigurationManager.AppSettings("UploadTimeOutMinutes")))
             If timeout_minutes <= 0 Then timeout_minutes = 60
-            Dim span As New TimeSpan(0, timeout_minutes, 0)
-            request.Timeout = CInt(span.TotalMilliseconds)                   'Upload timeout in milliseconds.
+            request.Timeout = New TimeSpan(0, timeout_minutes, 0)                   'Upload timeout in milliseconds.
 
             Dim response As PutObjectResponse = s3.PutObject(request)
             Console.WriteLine("Success.")
@@ -198,7 +191,7 @@ Public Class S3Manager
 
     Public Shared Function DeleteFile(bucketname As String, foldername As String, filepath As String) As Boolean
         Dim result As Boolean = False
-        Dim s3 As AmazonS3 = GetAmazonS3()
+        Dim s3 As AmazonS3Client = GetAmazonS3()
 
         Try
             Console.Write("Deleting file '" & filepath & "' ... ")
